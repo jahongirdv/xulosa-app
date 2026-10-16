@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+*.spec
+.DS_Store
+*.log
+main_broken.py
+main_backup_*.py
+shablon_backup_*.docx
