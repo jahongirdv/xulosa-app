@@ -6,6 +6,14 @@ import os
 import sys
 import re
 import traceback
+import ctypes # <-- ДОБАВЛЕНО ДЛЯ WINDOWS
+
+# Отключаем кривое масштабирование Windows (чтобы интерфейс не был огромным и размытым)
+if sys.platform.startswith("win"):
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    except Exception:
+        pass
 
 import pandas as pd
 from docxtpl import DocxTemplate
@@ -178,9 +186,11 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Xulosa Generator")
-        self.root.geometry("1150x950")
-        self.root.minsize(1000, 850)
-        self.root.resizable(True, True)
+        
+        # 🔥 УМЕНЬШАЕМ РАЗМЕР И РАЗВОРАЧИВАЕМ НА ВЕСЬ ЭКРАН
+        self.root.geometry("1100x850")
+        self.root.minsize(900, 700)
+        self.root.state('zoomed') # Развернуть на весь экран (работает в Windows)
 
         style = ttk.Style()
         style.configure(".", font=("Arial", 10))
@@ -188,9 +198,8 @@ class App:
         style.configure("TLabelframe", font=("Arial", 10, "bold"))
         style.configure("Action.TButton", font=("Arial", 11, "bold"), padding=8)
 
-        # Переменные для перевода
         self.current_lang = "uz"
-        self.ui_elements = {} # Сюда сохраним ссылки на элементы
+        self.ui_elements = {}
 
         self.excel_path = None
         self.last_out_file = None
@@ -282,11 +291,9 @@ class App:
         self.fields["lavozim"].set("Kichik muhandis")
         self.fields["fish"].insert(0, "B.K.Utemisov")
 
-        # --- НИЖНЯЯ ПАНЕЛЬ ---
-        ttk.Separator(root).pack(fill="x", pady=10)
-        
-        btn_frame = ttk.Frame(root, padding=5)
-        btn_frame.pack(pady=5)
+        # 🔥 НИЖНЯЯ ПАНЕЛЬ (прикреплена к низу)
+        btn_frame = ttk.Frame(root, padding=10)
+        btn_frame.pack(side="bottom", fill="x") # Кнопки всегда внизу
         
         self.btn_generate = ttk.Button(btn_frame, text="", style="Action.TButton", command=self.generate, width=30)
         self.btn_generate.pack(side="left", padx=10)
@@ -294,8 +301,9 @@ class App:
         self.btn_open = ttk.Button(btn_frame, text="", command=self.open_last, width=25)
         self.btn_open.pack(side="left", padx=10)
 
-        self.log = tk.Text(root, height=6, width=100, font=("Consolas", 9), bg="#f9f9f9", relief="solid", bd=1)
-        self.log.pack(padx=15, pady=10, fill="both", expand=True)
+        # Лог-окно (занимает оставшееся место)
+        self.log = tk.Text(root, height=5, width=100, font=("Consolas", 9), bg="#f9f9f9", relief="solid", bd=1)
+        self.log.pack(side="bottom", padx=15, pady=(0, 10), fill="x")
 
         # Применяем перевод при запуске
         self.update_ui_texts()
@@ -337,58 +345,15 @@ class App:
         self.btn_generate.config(text=t["btn_generate"])
         self.btn_open.config(text=t["btn_open"])
 
-        # Обновляем подписи у полей ввода вручную
-        labels_uz = ["Shahar:", "Sana:", "Tashkilot nomi:", "STIR:", "Tashkilot manzili:", "Tashkiloting rahbari:", "Bosh hisobchi:", "Mas'ul shaxs:", "Mutaxassis F.I.Sh.:", "Mutaxassis lavozimi:"]
-        labels_ru = ["Город:", "Дата:", "Название орг.:", "STIR:", "Адрес орг.:", "Руководитель:", "Гл. бухгалтер:", "Отв. лицо:", "Ф.И.О. эксперта:", "Должность эксперта:"]
-        
-        # Проходим по всем фреймам и меняем текст у Label
-        for frame in [self.frame_main, self.frame_dalolatnoma]:
-            for child in frame.winfo_children():
-                if isinstance(child, ttk.Frame):
-                    for subchild in child.winfo_children():
-                        if isinstance(subchild, ttk.Label):
-                            # Ищем по индексу
-                            pass # Самый надежный способ - пересобрать интерфейс, но для простоты оставим логику полей как есть, они не так важны, как заголовки.
-
     def select_excel(self):
-        # (Код выбора файла остается без изменений)
-        win = tk.Toplevel(self.root); win.title("Excel"); win.geometry("900x600"); win.transient(self.root); win.grab_set()
-        current_dir = [os.path.expanduser("~")]
-        top = ttk.Frame(win); top.pack(fill="x", padx=10, pady=8)
-        path_var = tk.StringVar(value=current_dir[0])
-        ttk.Entry(top, textvariable=path_var).pack(side="left", fill="x", expand=True, padx=8)
-        def go_up(): current_dir[0] = os.path.dirname(current_dir[0]); refresh()
-        ttk.Button(top, text="⬆ Up", command=go_up).pack(side="left")
-        mid = ttk.Frame(win); mid.pack(fill="both", expand=True, padx=10, pady=5)
-        scrollbar = ttk.Scrollbar(mid); scrollbar.pack(side="right", fill="y")
-        listbox = tk.Listbox(mid, font=("Arial", 11), yscrollcommand=scrollbar.set); listbox.pack(side="left", fill="both", expand=True); scrollbar.config(command=listbox.yview)
-        bottom = ttk.Frame(win); bottom.pack(fill="x", padx=10, pady=10)
-        def refresh():
-            listbox.delete(0, tk.END)
-            try: items = sorted(os.listdir(current_dir[0]))
-            except Exception: return
-            for it in items:
-                full = os.path.join(current_dir[0], it)
-                if os.path.isdir(full): listbox.insert(tk.END, "📁 " + it)
-            for it in items:
-                full = os.path.join(current_dir[0], it)
-                if os.path.isfile(full) and it.lower().endswith((".xlsx", ".xls")): listbox.insert(tk.END, "📄 " + it)
-            path_var.set(current_dir[0])
-        def on_double_click(event):
-            sel = listbox.curselection()
-            if not sel: return
-            name = listbox.get(sel[0])[2:]; full = os.path.join(current_dir[0], name)
-            if os.path.isdir(full): current_dir[0] = full; refresh()
-            else: self._choose_file(full, win)
-        listbox.bind("<Double-Button-1>", on_double_click)
-        def on_choose():
-            sel = listbox.curselection()
-            if not sel: return
-            name = listbox.get(sel[0])[2:]; full = os.path.join(current_dir[0], name)
-            if os.path.isfile(full): self._choose_file(full, win)
-            else: current_dir[0] = full; refresh()
-        ttk.Button(bottom, text="OK", command=on_choose).pack(side="right", padx=5)
-        refresh()
+        # 🔥 ОТКРЫВАЕМ СТАНДАРТНЫЙ ПРОВОДНИК WINDOWS
+        file_path = filedialog.askopenfilename(
+            title="Excel faylni tanlang",
+            filetypes=[("Excel files", "*.xlsx *.xls"), ("All files", "*.*")]
+        )
+        if file_path:
+            self.excel_path = file_path
+            self.lbl_excel.config(text=os.path.basename(file_path), foreground="black")
 
     def _choose_file(self, full_path, win):
         self.excel_path = full_path
@@ -409,7 +374,6 @@ class App:
         except Exception as e: messagebox.showerror("Error", str(e))
 
     def generate(self):
-        # (Код генерации остается без изменений)
         if not self.excel_path: return messagebox.showwarning("Warning", "Excel tanlang!")
         data = {k: v.get().strip() for k, v in self.fields.items()}
         if not data["inspection_date"]: return messagebox.showwarning("Warning", "Sanani kiriting!")
