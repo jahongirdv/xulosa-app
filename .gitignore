@@ -10,3 +10,6 @@ build/
 main_broken.py
 main_backup_*.py
 shablon_backup_*.docx
+*.spec
+__pycache__/
+venv/
