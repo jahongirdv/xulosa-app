@@ -24,7 +24,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          pyinstaller --onefile --windowed --name "XulosaGenerator" --add-data "shablon.docx;." main.py
+          pyinstaller --noconsole --onefile --name "XulosaGenerator" --collect-data "docxcompose" --add-data "shablon.docx;." main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
