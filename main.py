@@ -6,15 +6,6 @@ import os
 import sys
 import re
 import traceback
-import ctypes # <-- ДОБАВЛЕНО ДЛЯ WINDOWS
-
-# Отключаем кривое масштабирование Windows (чтобы интерфейс не был огромным и размытым)
-if sys.platform.startswith("win"):
-    try:
-        ctypes.windll.shcore.SetProcessDpiAwareness(1)
-    except Exception:
-        pass
-
 import pandas as pd
 from docxtpl import DocxTemplate
 from docx import Document
