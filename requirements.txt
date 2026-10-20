@@ -5,4 +5,3 @@ docxtpl
 docxcompose
 ttkwidgets
 pyinstaller
-EOF
