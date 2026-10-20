@@ -410,6 +410,12 @@ class App:
         self._apply_defaults()
         self.update_ui_texts()
         self._log_ready()
+                # Загрузка иконки (если файл существует)
+        try:
+            icon_path = resource_path("images.ico")
+            self.root.iconbitmap(icon_path)
+        except Exception:
+            pass  # Если файла нет, просто пропустим
 
     # ---------- Стили ----------
     def _setup_styles(self):
