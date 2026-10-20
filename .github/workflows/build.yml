@@ -25,7 +25,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "XulosaGenerator" --icon "images.ico" --add-data "shablon.docx;." --add-data "icon.ico;." main.py
+          pyinstaller --noconfirm --onefile --windowed --name "XulosaGenerator" --icon "images.ico" --add-data "shablon.docx;." --add-data "images.ico;." main.py
         shell: pwsh
 
       - name: Upload Artifact

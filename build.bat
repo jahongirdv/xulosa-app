@@ -30,7 +30,7 @@ pyinstaller ^
   --onefile ^
   --windowed ^
   --name "XulosaGenerator" ^
-  --icon "icon.ico" ^
+  --icon "images.ico" ^
   --add-data "shablon.docx;." ^
   --add-data "images.ico;." ^
   main.py
